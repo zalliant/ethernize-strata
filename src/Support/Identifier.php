@@ -1,0 +1,86 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Ethernize\Strata\Support;
+
+use Ethernize\Strata\Dialect\Dialect;
+use Ethernize\Strata\Exception\InvalidQueryException;
+
+/**
+ * Table and column names. They cannot be bound as parameters, so they are
+ * validated against a strict pattern and then quoted by the dialect. Anything
+ * outside the pattern is refused, never escaped: there is no way to smuggle
+ * SQL through an identifier.
+ */
+final class Identifier
+{
+    private const SEGMENT = '/^[A-Za-z_][A-Za-z0-9_]{0,62}$/';
+    private const CACHE_LIMIT = 2048;
+
+    /** @var array<string, string> validated and quoted identifiers, by dialect and spelling */
+    private static array $cache = [];
+
+    private function __construct()
+    {
+    }
+
+    /**
+     * "name" or "table.name"; with $allowStar the last segment may be "*".
+     */
+    public static function quote(Dialect $dialect, string $identifier, bool $allowStar = false): string
+    {
+        // Only identifiers that passed validation are cached, so a hit is always safe to reuse.
+        $key = $dialect->name() . ($allowStar ? '*' : ':') . $identifier;
+
+        if (isset(self::$cache[$key])) {
+            return self::$cache[$key];
+        }
+
+        $quoted = self::build($dialect, $identifier, $allowStar);
+
+        if (count(self::$cache) < self::CACHE_LIMIT) {
+            self::$cache[$key] = $quoted;
+        }
+
+        return $quoted;
+    }
+
+    private static function build(Dialect $dialect, string $identifier, bool $allowStar): string
+    {
+        $segments = explode('.', $identifier);
+
+        if (count($segments) > 2) {
+            throw new InvalidQueryException('Identifiers have at most two parts (table.column).');
+        }
+
+        $quoted = [];
+
+        foreach ($segments as $index => $segment) {
+            if ($allowStar && $segment === '*' && $index === count($segments) - 1) {
+                $quoted[] = '*';
+                continue;
+            }
+
+            if (preg_match(self::SEGMENT, $segment) !== 1) {
+                throw new InvalidQueryException('Invalid identifier. Use letters, digits and underscores, starting with a letter or underscore.');
+            }
+
+            $quoted[] = $dialect->quoteIdentifier($segment);
+        }
+
+        return implode('.', $quoted);
+    }
+
+    /**
+     * Validates a name that is stored by itself (a table in the schema API).
+     */
+    public static function assertName(string $name): string
+    {
+        if (preg_match(self::SEGMENT, $name) !== 1) {
+            throw new InvalidQueryException('Invalid name. Use letters, digits and underscores, starting with a letter or underscore.');
+        }
+
+        return $name;
+    }
+}

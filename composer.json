@@ -1,0 +1,38 @@
+{
+    "name": "zalliant/ethernize-strata",
+    "description": "Strata: persistence foundation (PDO connections, query builder, transactions, migrations) for Zalliant Ethernize.",
+    "type": "library",
+    "keywords": [
+        "ethernize",
+        "php",
+        "framework"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "ext-ctype": "*",
+        "ext-pdo": "*",
+        "zalliant/ethernize-core": "^0.1.0-beta.1"
+    },
+    "suggest": {
+        "ext-pdo_mysql": "MySQL and MariaDB support",
+        "ext-pdo_pgsql": "PostgreSQL support",
+        "ext-pdo_sqlite": "SQLite support"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ethernize\\Strata\\": "src/"
+        }
+    },
+    "archive": {
+        "exclude": [
+            "/tests",
+            "/.gitattributes"
+        ]
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}
