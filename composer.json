@@ -13,7 +13,7 @@
         "ext-ctype": "*",
         "ext-json": "*",
         "ext-pdo": "*",
-        "zalliant/ethernize-core": "^0.1.0-beta.2"
+        "zalliant/ethernize-core": "^0.1.0-beta.3"
     },
     "suggest": {
         "ext-pdo_mysql": "MySQL and MariaDB support",
