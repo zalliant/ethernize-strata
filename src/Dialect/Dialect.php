@@ -41,6 +41,16 @@ interface Dialect
     public function limitOffset(?int $limit, ?int $offset): string;
 
     /**
+     * Whether RIGHT JOIN exists on the server of this version (SQLite only has it since 3.39).
+     */
+    public function supportsRightJoin(string $serverVersion): bool;
+
+    /**
+     * Whether ALTER TABLE can add a foreign key or a CHECK constraint to an existing table.
+     */
+    public function altersConstraints(): bool;
+
+    /**
      * Whether DDL statements can be rolled back with the transaction.
      */
     public function transactionalDdl(): bool;
@@ -59,6 +69,21 @@ interface Dialect
      * Column definition SQL (without the name).
      */
     public function columnSql(Column $column, string $literal): string;
+
+    /**
+     * DROP INDEX for an already quoted index and table.
+     */
+    public function dropIndexSql(string $quotedIndex, string $quotedTable): string;
+
+    /**
+     * ALTER TABLE ... drop a foreign key, for an already quoted table and constraint name.
+     */
+    public function dropForeignSql(string $quotedTable, string $quotedName): string;
+
+    /**
+     * ALTER TABLE ... drop a CHECK constraint, for an already quoted table and constraint name.
+     */
+    public function dropCheckSql(string $quotedTable, string $quotedName): string;
 
     /**
      * SQL that returns one row when the named table exists. One bound parameter: the table name.

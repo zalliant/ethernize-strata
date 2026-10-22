@@ -47,6 +47,16 @@ final class SqliteDialect extends AbstractDialect
         return parent::limitOffset($limit, $offset);
     }
 
+    public function supportsRightJoin(string $serverVersion): bool
+    {
+        return version_compare($serverVersion, '3.39.0', '>=');
+    }
+
+    public function altersConstraints(): bool
+    {
+        return false;
+    }
+
     public function transactionalDdl(): bool
     {
         return true;
@@ -71,6 +81,8 @@ final class SqliteDialect extends AbstractDialect
             'bigInteger' => 'BIGINT',
             'boolean' => 'INTEGER',
             'float' => 'REAL',
+            'decimal' => 'NUMERIC(' . $column->length . ', ' . $column->scale . ')',
+            'date' => 'DATE',
             'dateTime' => 'DATETIME',
         };
     }

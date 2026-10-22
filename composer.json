@@ -11,8 +11,9 @@
     "require": {
         "php": "^8.2",
         "ext-ctype": "*",
+        "ext-json": "*",
         "ext-pdo": "*",
-        "zalliant/ethernize-core": "^0.1.0-beta.1"
+        "zalliant/ethernize-core": "^0.1.0-beta.2"
     },
     "suggest": {
         "ext-pdo_mysql": "MySQL and MariaDB support",
@@ -33,6 +34,19 @@
     "extra": {
         "branch-alias": {
             "dev-main": "0.1.x-dev"
+        },
+        "ethernize": {
+            "commands": [
+                "Ethernize\\Strata\\Cli\\MakeModelCommand",
+                "Ethernize\\Strata\\Cli\\MakeMigrationCommand"
+            ],
+            "resource-parts": [
+                "Ethernize\\Strata\\Cli\\ModelPart",
+                "Ethernize\\Strata\\Cli\\MigrationPart"
+            ],
+            "doctor-checks": [
+                "Ethernize\\Strata\\Cli\\StrataDoctorCheck"
+            ]
         }
     }
 }

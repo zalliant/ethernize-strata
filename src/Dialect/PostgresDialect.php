@@ -72,6 +72,8 @@ final class PostgresDialect extends AbstractDialect
             'bigInteger' => 'BIGINT',
             'boolean' => 'BOOLEAN',
             'float' => 'DOUBLE PRECISION',
+            'decimal' => 'NUMERIC(' . $column->length . ', ' . $column->scale . ')',
+            'date' => 'DATE',
             'dateTime' => 'TIMESTAMP',
         };
     }

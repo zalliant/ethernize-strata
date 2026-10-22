@@ -10,6 +10,7 @@ use Ethernize\Core\Config\Environment;
 use Ethernize\Core\Container\Container;
 use Ethernize\Core\Events\Terminated;
 use Ethernize\Strata\Config\DatabaseConfig;
+use Ethernize\Strata\Model\ModelContext;
 
 /**
  * Registers Strata. List it in app.providers and add config/database.php.
@@ -55,6 +56,13 @@ final class StrataProvider implements BootableProvider
             $this->current?->disconnectAll();
             $this->current = null;
         });
+
+        // Static shortcuts of models (Product::find(1)) ask this closure for a connection every time; it
+        // resolves the request-scoped DatabaseManager, so nothing of one request is kept for the next.
+        // Set 'models' => false in config/database.php to leave the model layer out entirely.
+        if ($app->config()->get('database.models', true) !== false) {
+            ModelContext::resolveUsing(fn (?string $name): Connection => $app->container()->get(DatabaseManager::class)->connection($name));
+        }
 
         if ($app->config()->has('database')) {
             $app->addManifestContributor(new StrataManifestContributor());

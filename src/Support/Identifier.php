@@ -73,6 +73,75 @@ final class Identifier
     }
 
     /**
+     * A table with an optional alias: "orders" or "orders o" or "orders AS o".
+     *
+     * @return array{string, ?string} the quoted FROM/JOIN text and the alias (or null)
+     */
+    public static function table(Dialect $dialect, string $spec): array
+    {
+        if (preg_match('/^([A-Za-z_][A-Za-z0-9_]{0,62}(?:\.[A-Za-z_][A-Za-z0-9_]{0,62})?)(?:\s+(?:AS\s+)?([A-Za-z_][A-Za-z0-9_]{0,62}))?$/i', trim($spec), $m) !== 1) {
+            throw new InvalidQueryException('Invalid table. Use "table" or "table alias".');
+        }
+
+        $alias = $m[2] ?? null;
+
+        return [self::quote($dialect, $m[1]) . ($alias !== null ? ' AS ' . $dialect->quoteIdentifier($alias) : ''), $alias];
+    }
+
+    /**
+     * A selectable or comparable expression. Only these forms exist, so nothing else can be smuggled in:
+     *
+     *   column          name, table.name, table.*, *
+     *   aggregate       count(*), count(col), count(distinct col), sum(col), avg(col), min(col), max(col)
+     *   alias (select)  any of the above followed by "as alias"
+     */
+    public static function expression(Dialect $dialect, string $expression, bool $allowAlias = false): string
+    {
+        $key = $dialect->name() . ($allowAlias ? '@' : '#') . $expression;
+
+        if (isset(self::$cache[$key])) {
+            return self::$cache[$key];
+        }
+
+        $text = trim($expression);
+        $alias = null;
+
+        if ($allowAlias && preg_match('/^(.+?)\s+AS\s+([A-Za-z_][A-Za-z0-9_]{0,62})$/is', $text, $m) === 1) {
+            [$text, $alias] = [trim($m[1]), $m[2]];
+        }
+
+        if (preg_match('/^(count|sum|avg|min|max)\s*\(\s*(distinct\s+)?([^()]+?)\s*\)$/i', $text, $m) === 1) {
+            $function = strtolower($m[1]);
+            $distinct = $m[2] !== '';
+            $argument = $m[3];
+
+            if ($argument === '*') {
+                if ($function !== 'count' || $distinct) {
+                    throw new InvalidQueryException('Only count(*) accepts *.');
+                }
+
+                $inner = '*';
+            } else {
+                $inner = self::quote($dialect, $argument);
+            }
+
+            $quoted = strtoupper($function) . '(' . ($distinct ? 'DISTINCT ' : '') . $inner . ')';
+        } else {
+            $quoted = self::quote($dialect, $text, allowStar: true);
+        }
+
+        if ($alias !== null) {
+            $quoted .= ' AS ' . $dialect->quoteIdentifier($alias);
+        }
+
+        if (count(self::$cache) < self::CACHE_LIMIT) {
+            self::$cache[$key] = $quoted;
+        }
+
+        return $quoted;
+    }
+
+    /**
      * Validates a name that is stored by itself (a table in the schema API).
      */
     public static function assertName(string $name): string

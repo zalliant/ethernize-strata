@@ -34,6 +34,31 @@ abstract class AbstractDialect implements Dialect
         return $sql;
     }
 
+    public function supportsRightJoin(string $serverVersion): bool
+    {
+        return true;
+    }
+
+    public function altersConstraints(): bool
+    {
+        return true;
+    }
+
+    public function dropIndexSql(string $quotedIndex, string $quotedTable): string
+    {
+        return 'DROP INDEX ' . $quotedIndex;
+    }
+
+    public function dropForeignSql(string $quotedTable, string $quotedName): string
+    {
+        return 'ALTER TABLE ' . $quotedTable . ' DROP CONSTRAINT ' . $quotedName;
+    }
+
+    public function dropCheckSql(string $quotedTable, string $quotedName): string
+    {
+        return 'ALTER TABLE ' . $quotedTable . ' DROP CONSTRAINT ' . $quotedName;
+    }
+
     public function backslashEscapes(): bool
     {
         return false;

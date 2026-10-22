@@ -59,6 +59,14 @@ final class Connection
         return $this->dialect;
     }
 
+    /**
+     * The version string of the database server (opens the connection).
+     */
+    public function serverVersion(): string
+    {
+        return (string) $this->pdo()->getAttribute(PDO::ATTR_SERVER_VERSION);
+    }
+
     public function isConnected(): bool
     {
         return $this->pdo !== null;

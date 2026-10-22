@@ -59,6 +59,16 @@ final class MySqlDialect extends AbstractDialect
         return parent::limitOffset($limit, $offset);
     }
 
+    public function dropIndexSql(string $quotedIndex, string $quotedTable): string
+    {
+        return 'DROP INDEX ' . $quotedIndex . ' ON ' . $quotedTable;
+    }
+
+    public function dropForeignSql(string $quotedTable, string $quotedName): string
+    {
+        return 'ALTER TABLE ' . $quotedTable . ' DROP FOREIGN KEY ' . $quotedName;
+    }
+
     public function transactionalDdl(): bool
     {
         return false;
@@ -84,10 +94,12 @@ final class MySqlDialect extends AbstractDialect
         return match ($column->type) {
             'string' => 'VARCHAR(' . $column->length . ')',
             'text' => 'TEXT',
-            'integer' => 'INT',
-            'bigInteger' => 'BIGINT',
+            'integer' => 'INT' . ($column->unsigned ? ' UNSIGNED' : ''),
+            'bigInteger' => 'BIGINT' . ($column->unsigned ? ' UNSIGNED' : ''),
             'boolean' => 'TINYINT(1)',
             'float' => 'DOUBLE',
+            'decimal' => 'DECIMAL(' . $column->length . ', ' . $column->scale . ')',
+            'date' => 'DATE',
             'dateTime' => 'DATETIME',
         };
     }
